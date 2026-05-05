@@ -20,5 +20,12 @@ jobs:
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
 
-      - name: 'Rilascio dei metadati'
+      - name: 'Validazione (Check-only)'
+        run: |
+          sf project deploy validate --source-dir force-app --target-org org_target --test-level RunLocalTests
+          # Questo comando simula il deploy e lancia tutti i test Apex locali. 
+          # Se qualcosa fallisce, il robot si ferma qui e la pipeline diventa rossa.
+
+      - name: 'Rilascio Effettivo (Solo se la validazione passa)'
+        if: github.ref == 'refs/heads/main' # Esempio: deploy solo se siamo sul main
         run: sf project deploy start --source-dir force-app
