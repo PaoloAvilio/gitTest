@@ -27,7 +27,14 @@ jobs:
         run: |
           mkdir delta
           sf sgd source delta --to HEAD --from origin/main^ --output delta/ --generate-delta
-          # Nota: "origin/main^" serve a confrontare l'ultimo commit con quello precedente al merge    
+          # Nota: "origin/main^" serve a confrontare l'ultimo commit con quello precedente al merge
+
+      - name: 'Visualizza contenuto Delta'
+        run: |
+          echo "--- CONTENUTO PACKAGE.XML ---"
+          cat delta/package/package.xml
+          echo "--- FILE NELLA CARTELLA DELTA ---"
+          find delta/force-app -type f        
       
       - name: 'Rilascio Effettivo'
         run: sf project deploy start --manifest delta/package/package.xml

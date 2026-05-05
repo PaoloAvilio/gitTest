@@ -7,7 +7,7 @@ jobs:
   validate-code:
     runs-on: ubuntu-latest
     steps:
-    
+
       - name: 'Checkout del codice'
         uses: actions/checkout@v3
         with:
@@ -28,6 +28,13 @@ jobs:
         run: |
           mkdir delta
           sf sgd source delta --to HEAD --from origin/main --output delta/ --generate-delta    
+
+      - name: 'Visualizza contenuto Delta'
+        run: |
+          echo "--- CONTENUTO PACKAGE.XML ---"
+          cat delta/package/package.xml
+          echo "--- FILE NELLA CARTELLA DELTA ---"
+          find delta/force-app -type f    
 
       - name: 'Validazione (Check-only)'
         # Valida solo i file cambiati usando il package.xml generato
