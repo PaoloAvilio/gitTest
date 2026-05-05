@@ -1,16 +1,17 @@
-name: Deploy Post-Merge
+name: Validazione PR
 on:
-  push:
-    branches: [ main ] # In GitHub, il Merge in main conta come un "push" su main
+  pull_request:
+    branches: [ main ] # Scatta quando apri una PR verso il main
 
 jobs:
-  actual-deploy:
+  validate-code:
     runs-on: ubuntu-latest
     steps:
+
       - name: 'Checkout del codice'
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Scarica tutta la cronologia per eventuali confronti futuri
+          fetch-depth: 0 # Scarica tutta la cronologia per il confronto
 
       - name: 'Install Salesforce CLI'
         run: npm install @salesforce/cli --global
@@ -26,15 +27,15 @@ jobs:
       - name: 'Generazione pacchetto Delta'
         run: |
           mkdir delta
-          sf sgd source delta --to HEAD --from origin/main^ --output delta/ --generate-delta
-          # Nota: "origin/main^" serve a confrontare l'ultimo commit con quello precedente al merge
+          sf sgd source delta --to HEAD --from origin/main --output delta/ --generate-delta    
 
       - name: 'Visualizza contenuto Delta'
         run: |
           echo "--- CONTENUTO PACKAGE.XML ---"
           cat delta/package/package.xml
           echo "--- FILE NELLA CARTELLA DELTA ---"
-          find delta/force-app -type f        
-      
-      - name: 'Rilascio Effettivo'
-        run: sf project deploy start --manifest delta/package/package.xml
+          find delta/force-app -type f    
+
+      - name: 'Validazione (Check-only)'
+        # Valida solo i file cambiati usando il package.xml generato
+        run: sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests
