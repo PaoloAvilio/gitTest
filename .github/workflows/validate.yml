@@ -1,13 +1,16 @@
-name: Deploy Post-Merge
+name: Validazione PR
 on:
-  push:
-    branches: [ main ] # In GitHub, il Merge in main conta come un "push" su main
+  pull_request:
+    branches: [ main ] # Scatta quando apri una PR verso il main
 
 jobs:
-  actual-deploy:
+  validate-code:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: 'Install Salesforce CLI'
         run: npm install @salesforce/cli --global
 
@@ -16,5 +19,5 @@ jobs:
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
 
-      - name: 'Deploy Effettivo'
-        run: sf project deploy start --source-dir force-app
+      - name: 'Validazione (Check-only)'
+        run: sf project deploy validate --source-dir force-app --test-level RunLocalTests
