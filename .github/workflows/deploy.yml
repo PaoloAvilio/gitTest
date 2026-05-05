@@ -1,0 +1,24 @@
+name: Deployment Automatico HNRG
+on:
+  push:
+    branches: [ main ] # Parte quando fai il push sul ramo principale
+
+jobs:
+  deploy-to-org:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout del codice'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 'Installazione Salesforce CLI'
+        run: npm install @salesforce/cli --global
+
+      - name: 'Autenticazione nella Org'
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
+
+      - name: 'Rilascio dei metadati'
+        run: sf project deploy start --source-dir force-app
