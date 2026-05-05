@@ -7,17 +7,28 @@ jobs:
   validate-code:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+    
+      - name: 'Checkout del codice'
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Scarica tutta la cronologia per il confronto
 
       - name: 'Install Salesforce CLI'
         run: npm install @salesforce/cli --global
+
+      - name: 'Installazione sfdx-git-delta'
+        run: echo y | sfdx plugins:install sfdx-git-delta  
 
       - name: 'Authenticate'
         run: |
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
 
+      - name: 'Generazione pacchetto Delta'
+        run: |
+          mkdir delta
+          sf sgd source delta --to HEAD --from origin/main --output delta/ --generate-delta    
+
       - name: 'Validazione (Check-only)'
-        run: sf project deploy validate --source-dir force-app --test-level RunLocalTests
+        # Valida solo i file cambiati usando il package.xml generato
+        run: sf project deploy validate --manifest delta/package/package.xml --test-level RunLocalTests

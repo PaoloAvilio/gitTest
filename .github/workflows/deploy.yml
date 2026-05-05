@@ -7,14 +7,27 @@ jobs:
   actual-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: 'Checkout del codice'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Scarica tutta la cronologia per eventuali confronti futuri
+
       - name: 'Install Salesforce CLI'
         run: npm install @salesforce/cli --global
+
+      - name: 'Installazione sfdx-git-delta'
+        run: echo y | sfdx plugins:install sfdx-git-delta  
 
       - name: 'Authenticate'
         run: |
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
 
-      - name: 'Deploy Effettivo'
-        run: sf project deploy start --source-dir force-app
+      - name: 'Generazione pacchetto Delta'
+        run: |
+          mkdir delta
+          sf sgd source delta --to HEAD --from origin/main^ --output delta/ --generate-delta
+          # Nota: "origin/main^" serve a confrontare l'ultimo commit con quello precedente al merge    
+      
+      - name: 'Rilascio Effettivo'
+        run: sf project deploy start --manifest delta/package/package.xml
