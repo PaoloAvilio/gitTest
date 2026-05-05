@@ -18,7 +18,7 @@ jobs:
       - name: 'Autenticazione nella Org'
         run: |
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
-          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias org_target
 
       - name: 'Validazione (Check-only)'
         run: |
@@ -28,4 +28,4 @@ jobs:
 
       - name: 'Rilascio Effettivo (Solo se la validazione passa)'
         if: github.ref == 'refs/heads/main' # Esempio: deploy solo se siamo sul main
-        run: sf project deploy start --source-dir force-app
+        run: sf project deploy start --source-dir force-app --target-org org_target
